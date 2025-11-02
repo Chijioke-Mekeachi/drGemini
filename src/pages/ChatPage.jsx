@@ -5,6 +5,7 @@ import useAuth from '../hooks/useAuth';
 import api from '../services/api';
 import Spinner from '../components/Spinner';
 import CreditModal from '../components/CreditModal';
+import Markdown from 'react-markdown';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([]);
@@ -158,7 +159,7 @@ export default function ChatPage() {
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-lg lg:max-w-2xl px-4 py-3 rounded-xl ${msg.role === 'user' ? 'bg-brand-blue text-white rounded-br-none' : `bg-white text-brand-gray-dark rounded-bl-none ${msg.isError ? 'bg-red-100 text-red-700' : ''}`}`}>
-                <p className="whitespace-pre-wrap">{msg.content}</p>
+                <Markdown >{msg.content}</Markdown>
               </div>
             </div>
           ))}
