@@ -38,6 +38,7 @@ export default function Header() {
             <Stethoscope className="h-8 w-8 text-brand-blue" />
             <span className="text-2xl font-bold text-brand-blue-dark">Dr. Gemini</span>
           </Link>
+        
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">

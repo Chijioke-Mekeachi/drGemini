@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { CreditCard, DollarSign, CheckCircle, Shield, Lock, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CreditCard, DollarSign, CheckCircle, Shield, Lock, Zap, Calendar, Clock } from 'lucide-react';
 import api from '../services/api';
 import useAuth from '../hooks/useAuth';
 
-const CreditPackage = ({ amount, credits, description, popular, onSelect, loading }) => (
+const CreditPackage = ({ amount, nairaAmount, credits, description, popular, onSelect, loading, duration = "1 Month" }) => (
   <div className={`relative bg-white rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${
     popular 
       ? 'border-brand-blue shadow-xl border-2' 
@@ -11,23 +11,32 @@ const CreditPackage = ({ amount, credits, description, popular, onSelect, loadin
   }`}>
     {popular && (
       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-        <span className="bg-brand-blue text-white p-1 rounded-full text-sm font-semibold w-full">
+        <span className="bg-brand-blue text-white px-3 py-1 rounded-full text-xs font-semibold">
           MOST POPULAR
         </span>
       </div>
     )}
     <button 
-      onClick={() => onSelect(amount * 100)}
+      onClick={() => onSelect(nairaAmount)}
       disabled={loading}
       className="w-full p-8 text-center disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <div className="mb-4">
-        <h3 className="text-5xl font-bold text-brand-blue-dark mb-2">${amount}</h3>
+        <h3 className="text-5xl font-bold text-brand-blue-dark mb-2">₦{nairaAmount?.toLocaleString()}</h3>
         <p className="text-lg text-brand-gray-dark font-semibold">{credits} Credits</p>
+        <p className="text-sm text-gray-500">≈ ${amount} USD</p>
       </div>
-      <p className="text-brand-gray-dark text-sm mb-6 leading-relaxed text-left">{description}</p>
-      <p className="text-brand-gray-dark text-sm mb-6 leading-relaxed text-left">For 1 Month</p>
-      <p className="text-brand-gray-dark text-sm mb-6 leading-relaxed text-left">Full Access to GemiDoc</p>
+      <div className="space-y-2 mb-6 text-left">
+        <p className="text-brand-gray-dark text-sm leading-relaxed">{description}</p>
+        <div className="flex items-center gap-2 text-brand-blue font-semibold">
+          <Calendar size={16} />
+          <span>{duration}</span>
+        </div>
+        <div className="flex items-center gap-2 text-green-600 font-semibold">
+          <Zap size={16} />
+          <span>Full Access to Dr. Gemini</span>
+        </div>
+      </div>
       <div className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
         popular 
           ? 'bg-brand-blue text-white hover:bg-brand-blue-dark' 
@@ -41,29 +50,75 @@ const CreditPackage = ({ amount, credits, description, popular, onSelect, loadin
 
 const PaystackPaymentModal = ({ isOpen, onClose, amount, email, onSuccess }) => {
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState('');
+
+  const validatePayment = () => {
+    if (!email || !email.includes('@')) {
+      return 'Valid email is required';
+    }
+    
+    if (!amount || amount < 1000) {
+      return 'Amount must be at least ₦1,000';
+    }
+    
+    if (!window.PaystackPop) {
+      return 'Payment system not loaded';
+    }
+    
+    const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    if (!paystackKey || !paystackKey.startsWith('pk_')) {
+      return 'Payment configuration error';
+    }
+    
+    return null;
+  };
 
   const initializePayment = () => {
     setProcessing(true);
+    setError('');
     
-    // Paystack integration
-    const handler = window.PaystackPop.setup({
-      key: process.env.REACT_APP_PAYSTACK_PUBLIC_KEY,
-      email: email,
-      amount: amount,
-      currency: 'USD',
-      ref: `CRD_${Math.floor((Math.random() * 1000000000) + 1)}`,
-      callback: function(response) {
-        setProcessing(false);
-        onSuccess(response.reference, amount);
-        onClose();
-      },
-      onClose: function() {
-        setProcessing(false);
-        onClose();
-      }
-    });
-    
-    handler.openIframe();
+    const validationError = validatePayment();
+    if (validationError) {
+      setError(validationError);
+      setProcessing(false);
+      return;
+    }
+
+    try {
+      const handler = window.PaystackPop.setup({
+        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        email: email,
+        amount: amount,
+        currency: 'NGN',
+        ref: `SUB_${Date.now()}`,
+        callback: function(response) {
+          console.log('Paystack success:', response);
+          setProcessing(false);
+          
+          // Convert NGN to USD equivalent for backend
+          // Using rough conversion: ₦1000 ≈ $1
+          const equivalentUSD = Math.round((amount / 1000) * 100); // Convert to cents
+          onSuccess(response.reference, equivalentUSD);
+          onClose();
+        },
+        onClose: function() {
+          console.log('Paystack modal closed');
+          setProcessing(false);
+          setError('Payment was cancelled');
+        },
+        onError: function(error) {
+          console.error('Paystack error:', error);
+          setError('Payment failed: ' + (error.message || 'Unknown error'));
+          setProcessing(false);
+        }
+      });
+      
+      handler.openIframe();
+    } catch (err) {
+      console.error('Paystack setup error:', err);
+      setError('Failed to initialize payment: ' + err.message);
+      setProcessing(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -72,14 +127,29 @@ const PaystackPaymentModal = ({ isOpen, onClose, amount, email, onSuccess }) => 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl max-w-md w-full p-8">
         <h3 className="text-2xl font-bold text-brand-blue-dark mb-2">Confirm Payment</h3>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-800 text-sm">{error}</p>
+          </div>
+        )}
+        
         <p className="text-brand-gray-dark mb-6">
-          You are about to purchase ${(amount / 100).toFixed(2)} worth of credits
+          You are about to purchase ₦{(amount).toLocaleString()} worth of credits
         </p>
         
         <div className="bg-gray-50 rounded-xl p-4 mb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="text-brand-gray-dark">Amount:</span>
-            <span className="text-2xl font-bold text-brand-blue-dark">${(amount / 100).toFixed(2)}</span>
+            <span className="text-2xl font-bold text-brand-blue-dark">₦{(amount).toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm text-brand-gray-dark mb-2">
+            <span>Email:</span>
+            <span className="font-semibold">{email}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm text-brand-gray-dark mb-2">
+            <span>Currency:</span>
+            <span className="font-semibold">Naira (NGN)</span>
           </div>
           <div className="flex justify-between items-center text-sm text-brand-gray-dark">
             <span>Payment Processor:</span>
@@ -89,7 +159,10 @@ const PaystackPaymentModal = ({ isOpen, onClose, amount, email, onSuccess }) => 
 
         <div className="flex gap-3">
           <button
-            onClick={onClose}
+            onClick={() => {
+              setError('');
+              onClose();
+            }}
             disabled={processing}
             className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
@@ -108,49 +181,208 @@ const PaystackPaymentModal = ({ isOpen, onClose, amount, email, onSuccess }) => 
             ) : (
               <>
                 <Lock size={16} />
-                Pay Securely
+                Pay Now
               </>
             )}
           </button>
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-xs text-gray-500">
+            Use test card: 4187 4274 1556 4246
+          </p>
         </div>
       </div>
     </div>
   );
 };
 
+const SubscriptionStatus = ({ subscription }) => {
+  if (!subscription) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+        <div className="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+        <p className="text-gray-600">Loading subscription status...</p>
+      </div>
+    );
+  }
+
+  if (!subscription.has_active_subscription) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
+        <Clock className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+        <h3 className="text-lg font-semibold text-yellow-800 mb-1">No Active Subscription</h3>
+        <p className="text-yellow-700">Choose a package below to get started</p>
+      </div>
+    );
+  }
+
+  const daysRemaining = subscription.days_remaining;
+  const isExpiringSoon = daysRemaining <= 7;
+
+  return (
+    <div className={`border rounded-xl p-6 text-center ${
+      isExpiringSoon 
+        ? 'bg-orange-50 border-orange-200' 
+        : 'bg-green-50 border-green-200'
+    }`}>
+      <CheckCircle className={`w-8 h-8 mx-auto mb-2 ${
+        isExpiringSoon ? 'text-orange-600' : 'text-green-600'
+      }`} />
+      <h3 className="text-lg font-semibold mb-1 capitalize">
+        {subscription.subscription_type} Subscription Active
+      </h3>
+      <p className={isExpiringSoon ? 'text-orange-700' : 'text-green-700'}>
+        {isExpiringSoon 
+          ? `Expires in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}`
+          : `Active for ${daysRemaining} more days`
+        }
+      </p>
+      {isExpiringSoon && (
+        <p className="text-orange-600 text-sm mt-2">
+          Renew now to continue uninterrupted access
+        </p>
+      )}
+    </div>
+  );
+};
+
 export default function CreditsPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [message, setMessage] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState(0);
-  const { user, updateUserBalance } = useAuth();
+  const [subscription, setSubscription] = useState(null);
+  const { user, updateUser } = useAuth();
 
-  const handlePackageSelect = (amountInCents) => {
-    setSelectedAmount(amountInCents);
+  useEffect(() => {
+    console.log('=== PAYSTACK DEBUG ===');
+    console.log('Paystack available:', !!window.PaystackPop);
+    console.log('Paystack key:', import.meta.env.VITE_PAYSTACK_PUBLIC_KEY);
+    console.log('User:', user);
+    
+    fetchSubscriptionStatus();
+  }, []);
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      setLoadingSubscription(true);
+      const response = await api.get('/credits/subscription', {
+        params: { _: Date.now() },
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      console.log('Subscription response:', response.data);
+      setSubscription(response.data);
+    } catch (error) {
+      console.error('Error fetching subscription status:', error);
+    } finally {
+      setLoadingSubscription(false);
+    }
+  };
+
+  const testPayment = () => {
+    if (!window.PaystackPop) {
+      alert('Paystack script not loaded! Check the script in index.html');
+      return;
+    }
+    
+    const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    console.log('Paystack Key:', paystackKey);
+    
+    if (!paystackKey || !paystackKey.startsWith('pk_')) {
+      alert('Paystack public key not found or invalid! Check your .env file');
+      return;
+    }
+
+    const userEmail = user?.email || 'customer@example.com';
+    const amountInNaira = 5000; // ₦5,000
+    
+    console.log('Payment details:', {
+      key: paystackKey.substring(0, 10) + '...',
+      email: userEmail,
+      amount: amountInNaira,
+      currency: 'NGN'
+    });
+
+    try {
+      const handler = window.PaystackPop.setup({
+        key: paystackKey,
+        email: userEmail,
+        amount: amountInNaira,
+        currency: 'NGN',
+        ref: 'TEST_' + Date.now(),
+        callback: function(response) {
+          console.log('Paystack success:', response);
+          alert('✅ Payment successful! Reference: ' + response.reference);
+          
+          // Convert NGN to USD equivalent for backend
+          const equivalentUSD = 500; // $5.00 equivalent in cents
+          handlePaymentSuccess(response.reference, equivalentUSD);
+        },
+        onClose: function() {
+          console.log('Payment modal closed');
+        },
+        onError: function(error) {
+          console.error('Paystack error:', error);
+          alert('Payment error occurred');
+        }
+      });
+      
+      handler.openIframe();
+    } catch (error) {
+      console.error('Paystack setup error:', error);
+      alert('Failed to initialize payment: ' + error.message);
+    }
+  };
+
+  const handlePackageSelect = (amountInNaira) => {
+    setSelectedAmount(amountInNaira);
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSuccess = async (reference, amountInCents) => {
+  const handlePaymentSuccess = async (reference, amountInUSD) => {
     setIsLoading(true);
     setMessage('');
     
     try {
-      // Verify payment with your backend
+      console.log('Verifying payment with backend:', {
+        reference,
+        amountInUSD,
+        amountInUSDdollars: amountInUSD / 100
+      });
+
       const response = await api.post('/credits/verify-payment', {
         reference,
-        amount: amountInCents
+        amount: amountInUSD
       });
       
-      updateUserBalance(response.data.newBalance);
+      console.log('Backend verification response:', response.data);
+      
+      updateUser({
+        ...user,
+        credits: response.data.newBalance,
+        subscription_ends_at: response.data.subscription_ends_at,
+        subscription_type: response.data.subscription_type
+      });
+
+      await fetchSubscriptionStatus();
+
       setMessage({
         type: 'success',
-        text: `Successfully added $${(amountInCents / 100).toFixed(2)} to your account!`
+        text: `Success! ${response.data.creditsAdded} credits added to your account. Subscription active until ${new Date(response.data.subscription_ends_at).toLocaleDateString()}.`
       });
     } catch (error) {
       console.error('Payment verification error:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Payment verification failed. Please contact support.';
+      
       setMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Payment verification failed. Please contact support.'
+        text: errorMessage
       });
     } finally {
       setIsLoading(false);
@@ -160,21 +392,27 @@ export default function CreditsPage() {
   const packages = [
     {
       amount: 5,
+      nairaAmount: 5000,
       credits: 50,
       description: "Perfect for getting started with Dr. Gemini",
-      popular: false
+      popular: false,
+      duration: "1 Month"
     },
     {
       amount: 15,
+      nairaAmount: 15000,
       credits: 120,
       description: "Great value for regular users",
-      popular: true
+      popular: true,
+      duration: "1 Month"
     },
     {
       amount: 25,
+      nairaAmount: 25000,
       credits: 260,
       description: "Best value for power users",
-      popular: false
+      popular: false,
+      duration: "1 Month"
     }
   ];
 
@@ -185,14 +423,41 @@ export default function CreditsPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-white rounded-full px-6 py-3 shadow-lg mb-6">
             <Zap className="text-yellow-500" size={20} />
-            <span className="font-semibold text-brand-blue-dark">Instant Credit Top-up</span>
+            <span className="font-semibold text-brand-blue-dark">Subscription Plans</span>
           </div>
+          
+          {/* Test Payment Button */}
+          <div className="mb-6">
+            <button 
+              onClick={testPayment}
+              className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors shadow-lg mb-2"
+            >
+              🧪 Test Paystack Payment (₦5,000)
+            </button>
+            <p className="text-sm text-gray-600">
+              Use test card: 4187 4274 1556 4246 (Any future expiry, any CVV)
+            </p>
+          </div>
+
           <h1 className="text-5xl font-bold text-brand-blue-dark mb-4">
-            Add Credits to Your Account
+            Upgrade Your Account
           </h1>
           <p className="text-xl text-brand-gray-dark max-w-2xl mx-auto leading-relaxed">
-            Continue your conversations with Dr. Gemini. Choose a package that fits your needs.
+            Get unlimited access to Dr. Gemini with our subscription plans. 
+            Choose the package that fits your needs.
           </p>
+        </div>
+
+        {/* Current Subscription Status */}
+        <div className="max-w-2xl mx-auto mb-12">
+          {loadingSubscription ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+              <div className="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-gray-600">Loading subscription status...</p>
+            </div>
+          ) : (
+            <SubscriptionStatus subscription={subscription} />
+          )}
         </div>
 
         {/* Credit Packages */}
@@ -201,13 +466,30 @@ export default function CreditsPage() {
             <CreditPackage
               key={index}
               amount={pkg.amount}
+              nairaAmount={pkg.nairaAmount}
               credits={pkg.credits}
               description={pkg.description}
               popular={pkg.popular}
+              duration={pkg.duration}
               onSelect={handlePackageSelect}
               loading={isLoading}
             />
           ))}
+        </div>
+
+        {/* Current Balance */}
+        <div className="max-w-2xl mx-auto mb-8 text-center">
+          <div className="bg-white rounded-2xl p-6 shadow-lg inline-block">
+            <div className="flex items-center gap-3">
+              <DollarSign className="text-green-600" size={24} />
+              <div className="text-left">
+                <p className="text-sm text-gray-600">Current Balance</p>
+                <p className="text-2xl font-bold text-brand-blue-dark">
+                  {user?.credits || 0} Credits
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Status Messages */}
@@ -227,7 +509,11 @@ export default function CreditsPage() {
                 ? 'bg-green-50 text-green-800 border border-green-200' 
                 : 'bg-red-50 text-red-800 border border-red-200'
             }`}>
-              <CheckCircle size={24} />
+              {message.type === 'success' ? (
+                <CheckCircle size={24} />
+              ) : (
+                <div className="w-6 h-6 border-2 border-red-800 border-t-transparent rounded-full animate-spin" />
+              )}
               <span className="text-lg font-semibold">{message.text}</span>
             </div>
           )}
@@ -263,6 +549,43 @@ export default function CreditsPage() {
             <p className="text-brand-gray-dark text-sm">
               Credit/debit cards, bank transfers, and mobile money supported
             </p>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="max-w-4xl mx-auto mt-16">
+          <h2 className="text-3xl font-bold text-center text-brand-blue-dark mb-8">
+            Frequently Asked Questions
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="font-semibold text-lg mb-2">How does billing work?</h3>
+              <p className="text-brand-gray-dark text-sm">
+                Subscriptions are billed in Naira (NGN). You'll get instant access to your credits 
+                and features immediately after payment.
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="font-semibold text-lg mb-2">Can I cancel anytime?</h3>
+              <p className="text-brand-gray-dark text-sm">
+                Yes! You can cancel your subscription at any time. You'll keep your credits 
+                until the end of your billing period.
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="font-semibold text-lg mb-2">What payment methods are accepted?</h3>
+              <p className="text-brand-gray-dark text-sm">
+                We accept all major credit/debit cards, bank transfers, and mobile money 
+                through our secure Paystack integration.
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="font-semibold text-lg mb-2">Do credits roll over?</h3>
+              <p className="text-brand-gray-dark text-sm">
+                Yes! Unused credits roll over to the next month as long as your subscription 
+                remains active.
+              </p>
+            </div>
           </div>
         </div>
 
