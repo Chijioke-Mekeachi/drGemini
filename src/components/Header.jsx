@@ -35,7 +35,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <Stethoscope className="h-8 w-8 text-brand-blue" />
+            <img src="/icon.png" alt="Dr. Gemini Logo" className="w-20 rounded"/>
             <span className="text-2xl font-bold text-brand-blue-dark">Dr. Gemini</span>
           </Link>
         
