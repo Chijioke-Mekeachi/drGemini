@@ -11,8 +11,9 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [chatType, setChatType] = useState('general'); // 'general' or 'diagnosis'
-  const [sessionId] = useState(uuidv4());
+  const [sessionId, setSessionId] = useState(uuidv4()); // Changed to allow updates
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const { user, updateUserBalance } = useAuth();
   const chatEndRef = useRef(null);
@@ -25,14 +26,44 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
-    // Add initial greeting message
-    setMessages([
-      {
-        role: 'model',
-        content: 'Hello! I am Dr. Gemini, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
-        id: uuidv4()
+    // Check if we're restoring a chat from history
+    const restoredChat = sessionStorage.getItem('restoredChat');
+    const restoredSessionId = sessionStorage.getItem('restoredSessionId');
+    
+    if (restoredChat && restoredSessionId) {
+      try {
+        const parsedMessages = JSON.parse(restoredChat);
+        setMessages(parsedMessages);
+        setSessionId(restoredSessionId);
+        setIsRestoring(true);
+        
+        // Clear the restored data from sessionStorage
+        setTimeout(() => {
+          sessionStorage.removeItem('restoredChat');
+          sessionStorage.removeItem('restoredSessionId');
+          setIsRestoring(false);
+        }, 1000);
+      } catch (error) {
+        console.error('Error restoring chat:', error);
+        // Fallback to initial greeting if restoration fails
+        setMessages([
+          {
+            role: 'model',
+            content: 'Hello! I am Dr. Gemini, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+            id: uuidv4()
+          }
+        ]);
       }
-    ]);
+    } else {
+      // Add initial greeting message only if not restoring
+      setMessages([
+        {
+          role: 'model',
+          content: 'Hello! I am Dr. Gemini, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+          id: uuidv4()
+        }
+      ]);
+    }
   }, []);
 
   const handleSendMessage = async (e) => {
@@ -87,6 +118,20 @@ export default function ChatPage() {
     setInput('I would like a diagnosis. Here are my symptoms: ');
   }
 
+  // Function to clear current chat and start fresh
+  const startNewChat = () => {
+    setMessages([
+      {
+        role: 'model',
+        content: 'Hello! I am Dr. Gemini, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+        id: uuidv4()
+      }
+    ]);
+    setSessionId(uuidv4());
+    setInput('');
+    setChatType('general');
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] bg-brand-blue-light">
       {showCreditModal && <CreditModal onClose={() => setShowCreditModal(false)} />}
@@ -94,6 +139,20 @@ export default function ChatPage() {
         <AlertTriangle size={16} />
         Disclaimer: Dr. Gemini is an AI assistant and not a substitute for professional medical advice.
       </div>
+      
+      {/* Header with new chat button */}
+      <div className="bg-white border-b px-4 py-2 flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-brand-blue-dark">
+          {isRestoring ? 'Restored Chat' : 'Chat with Dr. Gemini'}
+        </h2>
+        <button
+          onClick={startNewChat}
+          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+        >
+          New Chat
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((msg) => (

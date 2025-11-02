@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Spinner from '../components/Spinner';
-import { MessageSquare, DollarSign, Trash2, AlertCircle } from 'lucide-react';
+import { MessageSquare, DollarSign, Trash2, AlertCircle, RotateCcw } from 'lucide-react';
 
 export default function HistoryPage() {
     const [history, setHistory] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -34,6 +36,22 @@ export default function HistoryPage() {
         }
     }
 
+    const handleRestoreChat = (session) => {
+        // Convert the session data to the format expected by ChatPage
+        const messages = session.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            id: msg.id || `restored-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        }));
+
+        // Store the restored chat in sessionStorage
+        sessionStorage.setItem('restoredChat', JSON.stringify(messages));
+        sessionStorage.setItem('restoredSessionId', session[0]?.session_id || `restored-${Date.now()}`);
+
+        // Navigate to chat page
+        navigate('/chat');
+    }
+
     if (isLoading) return <div className="flex justify-center items-center h-[calc(100vh-80px)]"><Spinner size="large" /></div>;
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
 
@@ -54,14 +72,36 @@ export default function HistoryPage() {
                     <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
                         {history?.chatHistory?.length > 0 ? (
                             history.chatHistory.map((session, index) => (
-                                <div key={index} className="bg-white p-4 rounded-xl shadow-md">
-                                    <h3 className="font-bold mb-2 text-brand-blue-dark">Consultation from {new Date(session[0].created_at).toLocaleString()}</h3>
-                                    {session.map((msg, msgIndex) => (
-                                        <div key={msgIndex} className={`my-1 p-2 rounded-lg ${msg.role === 'user' ? 'bg-gray-100 text-right' : 'bg-blue-50'}`}>
-                                            <p className={`text-sm font-semibold ${msg.role === 'user' ? 'text-gray-600' : 'text-blue-600'}`}>{msg.role === 'user' ? 'You' : 'Dr. Gemini'}</p>
-                                            <p className="whitespace-pre-wrap">{msg.content}</p>
-                                        </div>
-                                    ))}
+                                <div key={index} className="bg-white p-4 rounded-xl shadow-md border border-gray-200 hover:border-brand-blue transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-brand-blue-dark flex-1">
+                                            Consultation from {new Date(session[0].created_at).toLocaleString()}
+                                        </h3>
+                                        <button 
+                                            onClick={() => handleRestoreChat(session)}
+                                            className="flex items-center gap-1 bg-brand-blue text-white px-3 py-1 rounded-lg text-sm hover:bg-brand-blue-dark transition-colors ml-2"
+                                            title="Restore this chat"
+                                        >
+                                            <RotateCcw size={14} /> Restore
+                                        </button>
+                                    </div>
+                                    <div className="max-h-40 overflow-y-auto">
+                                        {session.slice(0, 3).map((msg, msgIndex) => (
+                                            <div key={msgIndex} className={`my-1 p-2 rounded-lg ${msg.role === 'user' ? 'bg-gray-100 text-right' : 'bg-blue-50'}`}>
+                                                <p className={`text-sm font-semibold ${msg.role === 'user' ? 'text-gray-600' : 'text-blue-600'}`}>
+                                                    {msg.role === 'user' ? 'You' : 'Dr. Gemini'}
+                                                </p>
+                                                <p className="whitespace-pre-wrap text-sm line-clamp-2">
+                                                    {msg.content.length > 100 ? `${msg.content.substring(0, 100)}...` : msg.content}
+                                                </p>
+                                            </div>
+                                        ))}
+                                        {session.length > 3 && (
+                                            <p className="text-center text-sm text-gray-500 mt-2">
+                                                ... and {session.length - 3} more messages
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             ))
                         ) : (
