@@ -98,7 +98,7 @@ export default function HomePage() {
               me identify when my son's cough needed immediate medical attention versus when it was just a common cold."
             </p>
             <p className="text-brand-blue-dark dark:text-blue-400 font-semibold transition-colors duration-300">
-              - Juex, satisfied user since 2024
+              - Juex, satisfied user since 2025
             </p>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function HomePage() {
       {/* Made By Section */}
       <footer className="mt-12 py-6 w-full border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <p className="text-brand-gray dark:text-gray-400 text-sm transition-colors duration-300">
-          made by juex
+          made by judex
         </p>
       </footer>
     </div>
