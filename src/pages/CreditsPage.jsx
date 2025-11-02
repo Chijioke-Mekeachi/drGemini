@@ -427,17 +427,7 @@ export default function CreditsPage() {
           </div>
           
           {/* Test Payment Button */}
-          <div className="mb-6">
-            <button 
-              onClick={testPayment}
-              className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors shadow-lg mb-2"
-            >
-              🧪 Test Paystack Payment (₦5,000)
-            </button>
-            <p className="text-sm text-gray-600">
-              Use test card: 4187 4274 1556 4246 (Any future expiry, any CVV)
-            </p>
-          </div>
+          
 
           <h1 className="text-5xl font-bold text-brand-blue-dark mb-4">
             Upgrade Your Account
