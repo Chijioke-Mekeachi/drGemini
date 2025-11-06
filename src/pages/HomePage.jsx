@@ -45,7 +45,7 @@ export default function HomePage() {
 
       <header className="max-w-4xl mx-auto">
         <h1 className="text-4xl sm:text-6xl font-bold text-brand-blue-dark dark:text-white mb-4 transition-colors duration-300">
-          Welcome to Dr. Gemini
+          Welcome to Cura
         </h1>
         <p className="text-lg sm:text-xl text-brand-gray-dark dark:text-gray-300 mb-8 transition-colors duration-300">
           Your intelligent AI-powered health companion. Get instant, empathetic, and informative answers to your health questions.
@@ -63,7 +63,7 @@ export default function HomePage() {
 
       <section className="mt-16 sm:mt-24 w-full max-w-5xl">
         <h2 className="text-3xl font-bold text-center mb-10 text-brand-blue-dark dark:text-white transition-colors duration-300">
-          Why Choose Dr. Gemini?
+          Why Choose Cura?
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <FeatureCard 
@@ -92,7 +92,7 @@ export default function HomePage() {
           </h2>
           <div className="text-left">
             <p className="text-lg text-brand-gray-dark dark:text-gray-300 italic mb-4 transition-colors duration-300">
-              "Dr. Gemini has been an incredible resource for my family's health concerns. The AI provides thoughtful, 
+              "Cura has been an incredible resource for my family's health concerns. The AI provides thoughtful, 
               well-researched responses that have helped us make better healthcare decisions. It's like having a 
               medical professional available 24/7. The symptom analysis feature is particularly impressive - it helped 
               me identify when my son's cough needed immediate medical attention versus when it was just a common cold."

@@ -15,6 +15,7 @@ export default function ChatPage() {
   const [sessionId, setSessionId] = useState(uuidv4()); // Changed to allow updates
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [showWarning, setShowWarning] = useState(true);
 
   const { user, updateUserBalance } = useAuth();
   const chatEndRef = useRef(null);
@@ -30,14 +31,14 @@ export default function ChatPage() {
     // Check if we're restoring a chat from history
     const restoredChat = sessionStorage.getItem('restoredChat');
     const restoredSessionId = sessionStorage.getItem('restoredSessionId');
-    
+
     if (restoredChat && restoredSessionId) {
       try {
         const parsedMessages = JSON.parse(restoredChat);
         setMessages(parsedMessages);
         setSessionId(restoredSessionId);
         setIsRestoring(true);
-        
+
         // Clear the restored data from sessionStorage
         setTimeout(() => {
           sessionStorage.removeItem('restoredChat');
@@ -50,7 +51,7 @@ export default function ChatPage() {
         setMessages([
           {
             role: 'model',
-            content: 'Hello! I am Dr. Gemini, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+            content: 'Hello! I am Cura, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
             id: uuidv4()
           }
         ]);
@@ -60,7 +61,7 @@ export default function ChatPage() {
       setMessages([
         {
           role: 'model',
-          content: 'Hello! I am Dr. Gemini, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+          content: 'Hello! I am Cura, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
           id: uuidv4()
         }
       ]);
@@ -83,7 +84,7 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      const chatHistory = messages.map(({role, content}) => ({role, content}));
+      const chatHistory = messages.map(({ role, content }) => ({ role, content }));
       const res = await api.post('/chat', {
         message: input,
         history: chatHistory,
@@ -99,9 +100,9 @@ export default function ChatPage() {
       if (error.response?.status === 402) {
         setShowCreditModal(true);
       }
-      const errorMessage = { 
-        role: 'model', 
-        content: error.response?.data?.message || 'Sorry, something went wrong. Please try again.', 
+      const errorMessage = {
+        role: 'model',
+        content: error.response?.data?.message || 'Sorry, something went wrong. Please try again.',
         id: uuidv4(),
         isError: true
       };
@@ -112,8 +113,8 @@ export default function ChatPage() {
 
   const handleDiagnosisRequest = () => {
     if (user.credits < DIAGNOSIS_COST) {
-        setShowCreditModal(true);
-        return;
+      setShowCreditModal(true);
+      return;
     }
     setChatType('diagnosis');
     setInput('I would like a diagnosis. Here are my symptoms: ');
@@ -124,7 +125,7 @@ export default function ChatPage() {
     setMessages([
       {
         role: 'model',
-        content: 'Hello! I am Dr. Gemini, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+        content: 'Hello! I am Cura, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
         id: uuidv4()
       }
     ]);
@@ -136,15 +137,18 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] bg-brand-blue-light">
       {showCreditModal && <CreditModal onClose={() => setShowCreditModal(false)} />}
-      <div className="bg-yellow-100 text-yellow-800 p-2 text-center text-sm flex items-center justify-center gap-2">
-        <AlertTriangle size={16} />
-        Disclaimer: Dr. Gemini is an AI assistant and not a substitute for professional medical advice.
-      </div>
-      
+      {showWarning && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 text-center text-sm flex items-center justify-between gap-2">
+          <AlertTriangle size={16} />
+          Disclaimer: Cura is an AI assistant and not a substitute for professional medical advice.
+          <button onClick={()=>{setShowWarning(!showWarning)}}>x</button>
+        </div>
+      )}
+
       {/* Header with new chat button */}
       <div className="bg-white border-b px-4 py-2 flex justify-between items-center">
         <h2 className="text-lg font-semibold text-brand-blue-dark">
-          {isRestoring ? 'Restored Chat' : 'Chat with Dr. Gemini'}
+          {isRestoring ? 'Restored Chat' : 'Chat with Cura'}
         </h2>
         <button
           onClick={startNewChat}
@@ -165,8 +169,8 @@ export default function ChatPage() {
           ))}
           {isLoading && (
             <div className="flex justify-start">
-               <div className="max-w-lg lg:max-w-2xl px-4 py-3 rounded-xl bg-white text-brand-gray-dark rounded-bl-none flex items-center">
-                <Spinner /> <span className="ml-2">Dr. Gemini is thinking...</span>
+              <div className="max-w-lg lg:max-w-2xl px-4 py-3 rounded-xl bg-white text-brand-gray-dark rounded-bl-none flex items-center">
+                <Spinner /> <span className="ml-2">Cura is thinking...</span>
               </div>
             </div>
           )}
@@ -176,33 +180,33 @@ export default function ChatPage() {
 
       <div className="p-4 md:p-6 border-t bg-white">
         <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-2 mb-2">
-                <button 
-                    onClick={() => setChatType('general')}
-                    className={`px-3 py-1 text-sm rounded-full ${chatType === 'general' ? 'bg-brand-blue text-white' : 'bg-gray-200'}`}
-                >
-                   General Chat (${(GENERAL_COST / 100).toFixed(2)})
-                </button>
-                <button 
-                    onClick={handleDiagnosisRequest}
-                    className={`px-3 py-1 text-sm rounded-full flex items-center gap-1 ${chatType === 'diagnosis' ? 'bg-yellow-500 text-white' : 'bg-gray-200'}`}
-                >
-                    <Sparkles size={14} /> Diagnosis (${(DIAGNOSIS_COST / 100).toFixed(2)})
-                </button>
-            </div>
-            <form onSubmit={handleSendMessage} className="flex items-center gap-4">
-                <input 
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder={chatType === 'diagnosis' ? 'Describe your symptoms...' : 'Ask a health question...'}
-                    className="flex-1 p-3 border rounded-xl focus:ring-2 focus:ring-brand-blue focus:outline-none"
-                    disabled={isLoading}
-                />
-                <button type="submit" disabled={isLoading || !input.trim()} className="bg-brand-blue text-white p-3 rounded-full hover:bg-brand-blue-dark disabled:bg-brand-gray transition-colors">
-                    <Send size={24} />
-                </button>
-            </form>
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={() => setChatType('general')}
+              className={`px-3 py-1 text-sm rounded-full ${chatType === 'general' ? 'bg-brand-blue text-white' : 'bg-gray-200'}`}
+            >
+              General Chat (${(GENERAL_COST / 100).toFixed(2)})
+            </button>
+            <button
+              onClick={handleDiagnosisRequest}
+              className={`px-3 py-1 text-sm rounded-full flex items-center gap-1 ${chatType === 'diagnosis' ? 'bg-yellow-500 text-white' : 'bg-gray-200'}`}
+            >
+              <Sparkles size={14} /> Diagnosis (${(DIAGNOSIS_COST / 100).toFixed(2)})
+            </button>
+          </div>
+          <form onSubmit={handleSendMessage} className="flex items-center gap-4">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={chatType === 'diagnosis' ? 'Describe your symptoms...' : 'Ask a health question...'}
+              className="flex-1 p-3 border rounded-xl focus:ring-2 focus:ring-brand-blue focus:outline-none"
+              disabled={isLoading}
+            />
+            <button type="submit" disabled={isLoading || !input.trim()} className="bg-brand-blue text-white p-3 rounded-full hover:bg-brand-blue-dark disabled:bg-brand-gray transition-colors">
+              <Send size={24} />
+            </button>
+          </form>
         </div>
       </div>
     </div>

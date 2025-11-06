@@ -89,7 +89,7 @@ export default function HistoryPage() {
                                         {session.slice(0, 3).map((msg, msgIndex) => (
                                             <div key={msgIndex} className={`my-1 p-2 rounded-lg ${msg.role === 'user' ? 'bg-gray-100 text-right' : 'bg-blue-50'}`}>
                                                 <p className={`text-sm font-semibold ${msg.role === 'user' ? 'text-gray-600' : 'text-blue-600'}`}>
-                                                    {msg.role === 'user' ? 'You' : 'Dr. Gemini'}
+                                                    {msg.role === 'user' ? 'You' : 'Cura'}
                                                 </p>
                                                 <p className="whitespace-pre-wrap text-sm line-clamp-2">
                                                     {msg.content.length > 100 ? `${msg.content.substring(0, 100)}...` : msg.content}

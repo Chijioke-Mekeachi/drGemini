@@ -34,7 +34,7 @@ const CreditPackage = ({ amount, nairaAmount, credits, description, popular, onS
         </div>
         <div className="flex items-center gap-2 text-green-600 font-semibold">
           <Zap size={16} />
-          <span>Full Access to Dr. Gemini</span>
+          <span>Full Access to Cura</span>
         </div>
       </div>
       <div className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
@@ -394,7 +394,7 @@ export default function CreditsPage() {
       amount: 5,
       nairaAmount: 5000,
       credits: 50,
-      description: "Perfect for getting started with Dr. Gemini",
+      description: "Perfect for getting started with Cura",
       popular: false,
       duration: "1 Month"
     },
@@ -433,7 +433,7 @@ export default function CreditsPage() {
             Upgrade Your Account
           </h1>
           <p className="text-xl text-brand-gray-dark max-w-2xl mx-auto leading-relaxed">
-            Get unlimited access to Dr. Gemini with our subscription plans. 
+            Get unlimited access to Cura with our subscription plans. 
             Choose the package that fits your needs.
           </p>
         </div>
@@ -582,7 +582,7 @@ export default function CreditsPage() {
         {/* Footer Note */}
         <div className="text-center mt-12">
           <p className="text-brand-gray-dark text-sm">
-            Need help with payment? Contact our support team at support@drgemini.com
+            Need help with payment? Contact our support team at support@cura.com
           </p>
         </div>
       </div>
