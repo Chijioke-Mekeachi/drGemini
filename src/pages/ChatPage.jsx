@@ -51,7 +51,7 @@ export default function ChatPage() {
         setMessages([
           {
             role: 'model',
-            content: 'Hello! I am Cura, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+            content: 'Hello! I am CareWave AI, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
             id: uuidv4()
           }
         ]);
@@ -61,7 +61,7 @@ export default function ChatPage() {
       setMessages([
         {
           role: 'model',
-          content: 'Hello! I am Cura, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+          content: 'Hello! I am CareWave AI, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
           id: uuidv4()
         }
       ]);
@@ -125,7 +125,7 @@ export default function ChatPage() {
     setMessages([
       {
         role: 'model',
-        content: 'Hello! I am Cura, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
+        content: 'Hello! I am CareWave AI, your AI health assistant. How can I help you today? You can ask a general health question or request a diagnosis for your symptoms.',
         id: uuidv4()
       }
     ]);
@@ -140,7 +140,7 @@ export default function ChatPage() {
       {showWarning && (
         <div className="bg-yellow-100 text-yellow-800 p-2 text-center text-sm flex items-center justify-between gap-2">
           <AlertTriangle size={16} />
-          Disclaimer: Cura is an AI assistant and not a substitute for professional medical advice.
+          Disclaimer: CareWave AI is an AI assistant and not a substitute for professional medical advice.
           <button onClick={()=>{setShowWarning(!showWarning)}}>x</button>
         </div>
       )}
@@ -148,7 +148,7 @@ export default function ChatPage() {
       {/* Header with new chat button */}
       <div className="bg-white border-b px-4 py-2 flex justify-between items-center">
         <h2 className="text-lg font-semibold text-brand-blue-dark">
-          {isRestoring ? 'Restored Chat' : 'Chat with Cura'}
+          {isRestoring ? 'Restored Chat' : 'Chat with CareWave AI'}
         </h2>
         <button
           onClick={startNewChat}
@@ -170,7 +170,7 @@ export default function ChatPage() {
           {isLoading && (
             <div className="flex justify-start">
               <div className="max-w-lg lg:max-w-2xl px-4 py-3 rounded-xl bg-white text-brand-gray-dark rounded-bl-none flex items-center">
-                <Spinner /> <span className="ml-2">Cura is thinking...</span>
+                <Spinner /> <span className="ml-2">CareWave is thinking...</span>
               </div>
             </div>
           )}

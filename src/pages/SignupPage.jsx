@@ -35,7 +35,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-brand-blue-dark">Create Your Account</h1>
-          <p className="text-brand-gray-dark">Join Cura and get $5 free credit!</p>
+          <p className="text-brand-gray-dark">Join CareWave AI and get $5 free credit!</p>
         </div>
         
         {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">{error}</div>}
