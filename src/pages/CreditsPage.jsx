@@ -52,6 +52,9 @@ const PaystackPaymentModal = ({ isOpen, onClose, amount, email, onSuccess }) => 
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
 
+  // Convert Naira to Kobo for Paystack
+  const amountInKobo = amount * 100;
+
   const validatePayment = () => {
     if (!email || !email.includes('@')) {
       return 'Valid email is required';
@@ -88,7 +91,7 @@ const PaystackPaymentModal = ({ isOpen, onClose, amount, email, onSuccess }) => 
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
         email: email,
-        amount: amount,
+        amount: amountInKobo, // Now using kobo amount
         currency: 'NGN',
         ref: `SUB_${Date.now()}`,
         callback: function(response) {
@@ -299,11 +302,12 @@ export default function CreditsPage() {
 
     const userEmail = user?.email || 'customer@example.com';
     const amountInNaira = 5000; // ₦5,000
+    const amountInKobo = amountInNaira * 100; // Convert to kobo
     
     console.log('Payment details:', {
       key: paystackKey.substring(0, 10) + '...',
       email: userEmail,
-      amount: amountInNaira,
+      amount: amountInKobo,
       currency: 'NGN'
     });
 
@@ -311,7 +315,7 @@ export default function CreditsPage() {
       const handler = window.PaystackPop.setup({
         key: paystackKey,
         email: userEmail,
-        amount: amountInNaira,
+        amount: amountInKobo, // Now using kobo amount
         currency: 'NGN',
         ref: 'TEST_' + Date.now(),
         callback: function(response) {
@@ -427,7 +431,12 @@ export default function CreditsPage() {
           </div>
           
           {/* Test Payment Button */}
-          
+          <button 
+            onClick={testPayment}
+            className="mb-4 px-4 py-2 bg-red-500 text-white rounded-lg text-sm"
+          >
+            Test Payment (₦5,000)
+          </button>
 
           <h1 className="text-5xl font-bold text-brand-blue-dark mb-4">
             Upgrade Your Account
