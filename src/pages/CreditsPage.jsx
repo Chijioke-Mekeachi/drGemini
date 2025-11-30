@@ -22,7 +22,7 @@ const CreditPackage = ({ amount, nairaAmount, credits, description, popular, onS
       className="w-full p-8 text-center disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <div className="mb-4">
-        <h3 className="text-5xl font-bold text-brand-blue-dark mb-2">₦{nairaAmount?.toLocaleString()}</h3>
+        <h3 className="text-5xl font-bold text-brand-blue-dark mb-2">USD{amount?.toLocaleString()}</h3>
         <p className="text-lg text-brand-gray-dark font-semibold">{credits} Credits</p>
         <p className="text-sm text-gray-500">≈ ${amount} USD</p>
       </div>
