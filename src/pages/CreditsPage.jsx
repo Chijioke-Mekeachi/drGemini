@@ -429,14 +429,6 @@ export default function CreditsPage() {
             <Zap className="text-yellow-500" size={20} />
             <span className="font-semibold text-brand-blue-dark">Subscription Plans</span>
           </div>
-          
-          {/* Test Payment Button */}
-          <button 
-            onClick={testPayment}
-            className="mb-4 px-4 py-2 bg-red-500 text-white rounded-lg text-sm"
-          >
-            Test Payment (₦5,000)
-          </button>
 
           <h1 className="text-5xl font-bold text-brand-blue-dark mb-4">
             Upgrade Your Account
