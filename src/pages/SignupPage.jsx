@@ -8,6 +8,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
@@ -55,9 +56,10 @@ export default function SignupPage() {
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
+            <div className='flex flex-row gap-3'>
+              <input
               id="password"
-              type="password"
+              type={showPassword}
               autoComplete="new-password"
               required
               minLength="8"
@@ -65,12 +67,14 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm"
             />
+            <button className='border border-w-1 p-1 rounded-lg' onClick={()=>{showPassword === 'password'? setShowPassword('text'): setShowPassword('password')}}>{showPassword === 'password' ? "show":"hide"}</button>
+            </div>
           </div>
           <div>
             <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">Confirm Password</label>
             <input
               id="confirm-password"
-              type="password"
+              type={showPassword}
               autoComplete="new-password"
               required
               value={confirmPassword}

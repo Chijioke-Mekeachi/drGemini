@@ -6,6 +6,7 @@ import { LogIn } from 'lucide-react';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState('password');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -48,17 +49,20 @@ export default function LoginPage() {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm"
             />
           </div>
-          <div>
+          <div className=''>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
+            <div className='flex flex-row gap-3'>
+              <input
               id="password"
-              type="password"
+              type={showPassword}
               autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm"
             />
+            <button className='border border-w-1 p-1 rounded-lg' onClick={()=>{showPassword === 'password'? setShowPassword('text'): setShowPassword('password')}}>{showPassword === 'password' ? "show":"hide"}</button>
+            </div>
           </div>
           <div>
             <button
